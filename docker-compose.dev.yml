@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: bananas-postgres-dev
+    environment:
+      POSTGRES_DB: bananas_dev
+      POSTGRES_USER: bananas_user
+      POSTGRES_PASSWORD: bananas_pass
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bananas_user -d bananas_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bananas-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: bananas-server-dev
+    ports:
+      - "8081:8081"  # Standard Library
+      - "8082:8082"  # Gin
+      - "8083:8083"  # Fiber
+      - "8084:8084"  # Echo
+      - "8085:8085"  # Chi
+      - "8086:8086"  # Gorilla Mux
+    environment:
+      SERVER_PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: bananas_user
+      DB_PASSWORD: bananas_pass
+      DB_NAME: bananas_dev
+      DB_SSL_MODE: disable
+    volumes:
+      - ./server:/app
+      - /app/tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bananas-network
+    command: ["go", "run", "./cmd/api/all-frameworks.go"]
+
+volumes:
+  postgres_data:
+
+networks:
+  bananas-network:
+    driver: bridge
