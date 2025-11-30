@@ -1,0 +1,168 @@
+# Project root .gitignore
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Go (Server)
+# Binaries
+server/*.exe
+server/*.exe~
+server/*.dll
+server/*.so
+server/*.dylib
+server/main
+server/server
+
+# Test binary, built with `go test -c`
+server/*.test
+
+# Output of the go coverage tool
+server/*.out
+server/coverage.html
+
+# Go workspace file
+server/go.work
+
+# Dependency directories
+server/vendor/
+
+# Air live reload
+server/tmp/
+server/*.log
+
+# Frontend (clients/)
+
+# React
+clients/react/node_modules/
+clients/react/build/
+clients/react/.env.local
+clients/react/.env.development.local
+clients/react/.env.test.local
+clients/react/.env.production.local
+clients/react/npm-debug.log*
+clients/react/yarn-debug.log*
+clients/react/yarn-error.log*
+clients/react/.DS_Store
+clients/react/Thumbs.db
+
+# Vue
+clients/vue/node_modules/
+clients/vue/dist/
+clients/vue/.local
+clients/vue/.env.local
+clients/vue/.env.*.local
+clients/vue/npm-debug.log*
+clients/vue/yarn-debug.log*
+clients/vue/yarn-error.log*
+clients/vue/lerna-debug.log*
+clients/vue/.DS_Store
+clients/vue/Thumbs.db
+
+# Angular
+clients/angular/node_modules/
+clients/angular/dist/
+clients/angular/.angular/
+clients/angular/.env.local
+clients/angular/.env.*.local
+clients/angular/npm-debug.log*
+clients/angular/yarn-debug.log*
+clients/angular/yarn-error.log*
+clients/angular/lerna-debug.log*
+clients/angular/.DS_Store
+clients/angular/Thumbs.db
+
+# Svelte
+clients/svelte/node_modules/
+clients/svelte/build/
+clients/svelte/.svelte-kit/
+clients/svelte/.env.local
+clients/svelte/.env.*.local
+clients/svelte/npm-debug.log*
+clients/svelte/yarn-debug.log*
+clients/svelte/yarn-error.log*
+clients/svelte/.DS_Store
+clients/svelte/Thumbs.db
+
+# SolidJS
+clients/solid/node_modules/
+clients/solid/dist/
+clients/solid/.env.local
+clients/solid/.env.*.local
+clients/solid/npm-debug.log*
+clients/solid/yarn-debug.log*
+clients/solid/yarn-error.log*
+clients/solid/.DS_Store
+clients/solid/Thumbs.db
+
+# Templ
+clients/templ/node_modules/
+clients/templ/dist/
+clients/templ/.env.local
+clients/templ/.env.*.local
+clients/templ/npm-debug.log*
+clients/templ/yarn-debug.log*
+clients/templ/yarn-error.log*
+clients/templ/.DS_Store
+clients/templ/Thumbs.db
+
+# HTMX (minimal framework, but could have node_modules if used)
+clients/htmx/node_modules/
+clients/htmx/.env.local
+clients/htmx/.env.*.local
+
+# Database
+database/*.db
+database/*.db-journal
+database/*.sqlite
+database/*.sqlite3
+
+# Docker
+.dockerignore
+
+# Tilt
+.tilt/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Temporary folders
+tmp/
+temp/
