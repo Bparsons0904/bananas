@@ -16,6 +16,8 @@
             --react-color: #61dafb;
             --solid-color: #2c4f7c;
             --angular-color: #dd0031;
+            --vue-color: #42b883;
+            --svelte-color: #ff3e00;
             --bg-dark: #1a1a1a;
             --bg-darker: #0d0d0d;
             --text-primary: rgba(255, 255, 255, 0.87);
@@ -121,6 +123,14 @@
             color: var(--angular-color);
         }
 
+        .framework-btn[data-framework="vue"] {
+            color: var(--vue-color);
+        }
+
+        .framework-btn[data-framework="svelte"] {
+            color: var(--svelte-color);
+        }
+
         .framework-btn.active[data-framework="react"] {
             background: var(--react-color);
             color: #000;
@@ -133,6 +143,16 @@
 
         .framework-btn.active[data-framework="angular"] {
             background: var(--angular-color);
+            color: white;
+        }
+
+        .framework-btn.active[data-framework="vue"] {
+            background: var(--vue-color);
+            color: white;
+        }
+
+        .framework-btn.active[data-framework="svelte"] {
+            background: var(--svelte-color);
             color: white;
         }
 
@@ -266,6 +286,12 @@
             <button class="framework-btn" data-framework="angular" onclick="switchFramework('angular')">
                 🅰️ Angular
             </button>
+            <button class="framework-btn" data-framework="vue" onclick="switchFramework('vue')">
+                ✌️ Vue
+            </button>
+            <button class="framework-btn" data-framework="svelte" onclick="switchFramework('svelte')">
+                🔥 Svelte
+            </button>
         </div>
     </header>
 
@@ -290,7 +316,7 @@
     <footer class="footer">
         <p>
             Testing 6 Go Frameworks (Standard, Gin, Fiber, Echo, Chi, Gorilla) × 4 ORMs (database/sql, GORM, SQLx, PGX)
-            with 3 Frontend Frameworks
+            with 5 Frontend Frameworks
         </p>
     </footer>
 
@@ -298,19 +324,25 @@
         const frameworkPorts = {
             'react': 5173,
             'solid': 5174,
-            'angular': 5175
+            'angular': 5175,
+            'vue': 5176,
+            'svelte': 5177
         };
 
         const frameworkNames = {
             'react': 'React',
             'solid': 'Solid',
-            'angular': 'Angular'
+            'angular': 'Angular',
+            'vue': 'Vue',
+            'svelte': 'Svelte'
         };
 
         const frameworkEmojis = {
             'react': '⚛️',
             'solid': '🔷',
-            'angular': '🅰️'
+            'angular': '🅰️',
+            'vue': '✌️',
+            'svelte': '🔥'
         };
 
         let currentFramework = 'react';
@@ -339,7 +371,9 @@
                 const colors = {
                     'react': 'var(--react-color)',
                     'solid': 'var(--solid-color)',
-                    'angular': 'var(--angular-color)'
+                    'angular': 'var(--angular-color)',
+                    'vue': 'var(--vue-color)',
+                    'svelte': 'var(--svelte-color)'
                 };
                 spinner.style.borderTopColor = colors[framework];
             }
@@ -370,6 +404,12 @@
                         break;
                     case '3':
                         switchFramework('angular');
+                        break;
+                    case '4':
+                        switchFramework('vue');
+                        break;
+                    case '5':
+                        switchFramework('svelte');
                         break;
                 }
             }
