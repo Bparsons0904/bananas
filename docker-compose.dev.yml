@@ -40,6 +40,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-bananas_pass}
       DB_NAME: ${DB_NAME:-bananas_dev}
       DB_SSL_MODE: ${DB_SSL_MODE:-disable}
+      DB_ADMIN_USER: ${DB_ADMIN_USER:-postgres}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD:-postgres}
     volumes:
       - ./server:/app
       - /app/tmp
@@ -48,7 +50,7 @@ services:
         condition: service_healthy
     networks:
       - bananas-network
-    command: ["go", "run", "./cmd/api/all-frameworks.go"]
+    command: ["go", "run", "./cmd/api/main.go"]
 
 volumes:
   postgres_data:

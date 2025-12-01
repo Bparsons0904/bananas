@@ -1,42 +1,21 @@
-.PHONY: test build run-standard run-gin run-fiber run-echo run-chi run-gorilla migrate-up migrate-down seed docker-up docker-down
+.PHONY: test build run migrate-up migrate-down seed docker-up docker-down dev dev-down deps clean
 
 # Run tests
 test:
 	cd server && go test ./...
 
-# Build the application
+# Build the application (all 6 frameworks in one binary)
 build:
-	cd server && go build -o bin/standard ./cmd/api/main.go
-	cd server && go build -o bin/gin ./cmd/api/gin.go
-	cd server && go build -o bin/fiber ./cmd/api/fiber.go
-	cd server && go build -o bin/echo ./cmd/api/echo.go
-	cd server && go build -o bin/chi ./cmd/api/chi.go
-	cd server && go build -o bin/gorilla ./cmd/api/gorilla.go
+	cd server && go build -o bin/api ./cmd/api
 
-# Run all frameworks together
-run-all:
-	cd server && go run ./cmd/api/all-frameworks.go
-
-# Run individual frameworks (for testing)
-run-standard:
-	cd server && go run ./cmd/api/main.go
-
-run-gin:
-	cd server && go run ./cmd/api/gin.go
-
-run-fiber:
-	cd server && go run ./cmd/api/fiber.go
-
-run-echo:
-	cd server && go run ./cmd/api/echo.go
-
-run-chi:
-	cd server && go run ./cmd/api/chi.go
-
-run-gorilla:
-	cd server && go run ./cmd/api/gorilla.go
+# Run all 6 frameworks
+run:
+	cd server && go run ./cmd/api
 
 # Database operations
+create-db:
+	cd server && go run cmd/migration/main.go create-db
+
 migrate-up:
 	cd server && go run cmd/migration/main.go up
 
@@ -45,6 +24,9 @@ migrate-down:
 
 seed:
 	cd server && go run cmd/migration/main.go seed
+
+# Complete database setup (for production/fresh installs)
+db-setup: create-db migrate-up seed
 
 # Docker operations
 docker-up:

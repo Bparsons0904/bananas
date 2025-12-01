@@ -11,24 +11,31 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
+	Host          string
+	Port          string
+	User          string
+	Password      string
+	DBName        string
+	SSLMode       string
+	AdminUser     string
+	AdminPassword string
 }
 
 func New() (Config, error) {
+	dbUser := getEnv("DB_USER", "bananas_user")
+	dbPassword := getEnv("DB_PASSWORD", "bananas_pass")
+
 	config := Config{
 		ServerPort: getEnv("SERVER_PORT", "8080"),
 		DatabaseConfig: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
-			User:     getEnv("DB_USER", "bananas_user"),
-			Password: getEnv("DB_PASSWORD", "bananas_pass"),
-			DBName:   getEnv("DB_NAME", "bananas_dev"),
-			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
+			Host:          getEnv("DB_HOST", "localhost"),
+			Port:          getEnv("DB_PORT", "5432"),
+			User:          dbUser,
+			Password:      dbPassword,
+			DBName:        getEnv("DB_NAME", "bananas_dev"),
+			SSLMode:       getEnv("DB_SSL_MODE", "disable"),
+			AdminUser:     getEnv("DB_ADMIN_USER", dbUser),
+			AdminPassword: getEnv("DB_ADMIN_PASSWORD", dbPassword),
 		},
 	}
 

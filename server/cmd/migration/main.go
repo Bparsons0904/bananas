@@ -4,13 +4,16 @@ import (
 	"bananas/internal/config"
 	"bananas/internal/database"
 	"bananas/internal/logger"
+	"database/sql"
 	"fmt"
 	"os"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run cmd/migration/main.go [up|down|seed]")
+		fmt.Println("Usage: go run cmd/migration/main.go [create-db|up|down|seed]")
 		os.Exit(1)
 	}
 
@@ -23,31 +26,113 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := database.New(cfg)
-	if err != nil {
-		log.Er("failed to connect to database", err)
-		os.Exit(1)
-	}
-	defer db.Close()
-
 	switch command {
-	case "up":
-		err = migrateUp(db)
-	case "down":
-		err = migrateDown(db)
-	case "seed":
-		err = seed(db)
+	case "create-db":
+		err = createDatabase(cfg, log)
+	case "up", "down", "seed":
+		db, err := database.New(cfg)
+		if err != nil {
+			log.Er("failed to connect to database", err)
+			os.Exit(1)
+		}
+		defer db.Close()
+
+		switch command {
+		case "up":
+			err = migrateUp(db)
+		case "down":
+			err = migrateDown(db)
+		case "seed":
+			err = seed(db)
+		}
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
+		fmt.Println("Available commands: create-db, up, down, seed")
 		os.Exit(1)
 	}
 
 	if err != nil {
-		log.Er("migration failed", err)
+		log.Er("command failed", err)
 		os.Exit(1)
 	}
 
-	log.Info("Migration completed successfully")
+	log.Info("Command completed successfully")
+}
+
+func createDatabase(cfg config.Config, log logger.Logger) error {
+	log.Info("Creating database if it doesn't exist")
+
+	adminDSN := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=postgres sslmode=%s",
+		cfg.DatabaseConfig.Host,
+		cfg.DatabaseConfig.Port,
+		cfg.DatabaseConfig.AdminUser,
+		cfg.DatabaseConfig.AdminPassword,
+		cfg.DatabaseConfig.SSLMode,
+	)
+
+	adminDB, err := sql.Open("postgres", adminDSN)
+	if err != nil {
+		log.Er("failed to connect to postgres database", err)
+		return err
+	}
+	defer adminDB.Close()
+
+	if err := adminDB.Ping(); err != nil {
+		log.Er("failed to ping postgres database", err)
+		return err
+	}
+
+	var exists bool
+	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = '%s')", cfg.DatabaseConfig.DBName)
+	err = adminDB.QueryRow(query).Scan(&exists)
+	if err != nil {
+		log.Er("failed to check if database exists", err)
+		return err
+	}
+
+	if exists {
+		log.Info("Database already exists", "database", cfg.DatabaseConfig.DBName)
+		return nil
+	}
+
+	createDBQuery := fmt.Sprintf("CREATE DATABASE %s", cfg.DatabaseConfig.DBName)
+	_, err = adminDB.Exec(createDBQuery)
+	if err != nil {
+		log.Er("failed to create database", err)
+		return err
+	}
+
+	log.Info("Database created successfully", "database", cfg.DatabaseConfig.DBName)
+
+	if cfg.DatabaseConfig.User != cfg.DatabaseConfig.AdminUser {
+		var userExists bool
+		userQuery := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '%s')", cfg.DatabaseConfig.User)
+		err = adminDB.QueryRow(userQuery).Scan(&userExists)
+		if err != nil {
+			log.Er("failed to check if user exists", err)
+			return err
+		}
+
+		if !userExists {
+			createUserQuery := fmt.Sprintf("CREATE USER %s WITH PASSWORD '%s'", cfg.DatabaseConfig.User, cfg.DatabaseConfig.Password)
+			_, err = adminDB.Exec(createUserQuery)
+			if err != nil {
+				log.Er("failed to create user", err)
+				return err
+			}
+			log.Info("Database user created", "user", cfg.DatabaseConfig.User)
+		}
+
+		grantQuery := fmt.Sprintf("GRANT ALL PRIVILEGES ON DATABASE %s TO %s", cfg.DatabaseConfig.DBName, cfg.DatabaseConfig.User)
+		_, err = adminDB.Exec(grantQuery)
+		if err != nil {
+			log.Er("failed to grant privileges", err)
+			return err
+		}
+		log.Info("Database privileges granted", "user", cfg.DatabaseConfig.User)
+	}
+
+	return nil
 }
 
 func migrateUp(db *database.DB) error {

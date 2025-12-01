@@ -85,7 +85,7 @@ if DEV_MODE:
         'server-2-build-all',
         cmd='''
         cd server && echo "Building all framework servers..."
-        cd server && go build -o tmp/all-frameworks ./cmd/api/all-frameworks.go
+        cd server && go build -o tmp/bananas ./cmd/api/main.go
         echo "✅ All frameworks built successfully!"
         ''',
         deps=['./server'],
