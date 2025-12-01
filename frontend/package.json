@@ -1,0 +1,12 @@
+{
+  "name": "bananas-frontend-main",
+  "version": "1.0.0",
+  "description": "Bananas main frontend launcher",
+  "scripts": {
+    "dev": "npx serve . -p 5172 --cors",
+    "serve": "npx serve . -p 5172 --cors"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

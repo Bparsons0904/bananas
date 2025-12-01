@@ -58,6 +58,22 @@ func main() {
 	// Create a router for the standard library
 	mux := http.NewServeMux()
 	
+	// Add CORS middleware
+	corsMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	// Add middleware to set framework context
 	frameworkMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +110,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    ":" + app.Config.ServerPort,
-		Handler: frameworkMiddleware(mux),
+		Handler: corsMiddleware(frameworkMiddleware(mux)),
 	}
 
 	done := make(chan bool, 1)

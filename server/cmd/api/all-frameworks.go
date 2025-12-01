@@ -66,6 +66,21 @@ func gracefulShutdown(
 	done <- true
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	log := logger.New("main")
 
@@ -122,7 +137,7 @@ func main() {
 
 		server := &http.Server{
 			Addr:    ":8081",
-			Handler: frameworkMiddleware(mux),
+			Handler: corsMiddleware(frameworkMiddleware(mux)),
 		}
 		servers = append(servers, server)
 		
@@ -143,6 +158,21 @@ func main() {
 		
 		r.Use(gin.Logger())
 		r.Use(gin.Recovery())
+
+		// CORS middleware
+		r.Use(func(c *gin.Context) {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+			if c.Request.Method == "OPTIONS" {
+				c.AbortWithStatus(http.StatusOK)
+				return
+			}
+
+			c.Next()
+		})
+
 		r.Use(func(c *gin.Context) {
 			c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "framework", "gin"))
 			c.Next()
@@ -195,6 +225,20 @@ func main() {
 		})
 
 		fiberApp.Use(recover.New())
+
+		// CORS middleware
+		fiberApp.Use(func(c *fiber.Ctx) error {
+			c.Set("Access-Control-Allow-Origin", "*")
+			c.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+			if c.Method() == "OPTIONS" {
+				return c.SendStatus(fiber.StatusOK)
+			}
+
+			return c.Next()
+		})
+
 		fiberApp.Use(func(c *fiber.Ctx) error {
 			c.Context().SetUserValue("framework", "fiber")
 			return c.Next()
@@ -287,6 +331,7 @@ func main() {
 		e.HideBanner = true
 		e.Use(echomiddleware.Logger())
 		e.Use(echomiddleware.Recover())
+		e.Use(echomiddleware.CORS())
 		e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
 				c.SetRequest(c.Request().WithContext(context.WithValue(c.Request().Context(), "framework", "echo")))
@@ -342,6 +387,23 @@ func main() {
 		r.Use(middleware.Recoverer)
 		r.Use(middleware.RequestID)
 		r.Use(middleware.RealIP)
+
+		// CORS middleware
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+				if r.Method == "OPTIONS" {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+
+				next.ServeHTTP(w, r)
+			})
+		})
+
 		r.Use(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				ctx := context.WithValue(r.Context(), "framework", "chi")
@@ -390,6 +452,23 @@ func main() {
 	// 6. Gorilla Mux Server (Port 8086)
 	{
 		r := mux.NewRouter()
+
+		// CORS middleware
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+				if r.Method == "OPTIONS" {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+
+				next.ServeHTTP(w, r)
+			})
+		})
+
 		r.Use(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				ctx := context.WithValue(r.Context(), "framework", "gorilla")

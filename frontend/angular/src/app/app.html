@@ -1,0 +1,75 @@
+<div class="app">
+  <header>
+    <h1>🍌 Bananas Framework Tester</h1>
+    <p>Angular Client</p>
+  </header>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Framework</label>
+      <select
+        [value]="selectedFramework().value"
+        (change)="onFrameworkChange($any($event.target).value)">
+        @for (fw of frameworks; track fw.value) {
+          <option [value]="fw.value">
+            {{fw.name}} (:{{fw.port}})
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>ORM</label>
+      <select
+        [value]="selectedOrm().value"
+        (change)="onOrmChange($any($event.target).value)">
+        @for (orm of orms; track orm.value) {
+          <option [value]="orm.value">
+            {{orm.name}}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Endpoint</label>
+      <select
+        [value]="selectedEndpoint().path"
+        (change)="onEndpointChange($any($event.target).value)">
+        @for (ep of endpoints; track ep.path) {
+          <option [value]="ep.path">
+            {{ep.name}}
+          </option>
+        }
+      </select>
+    </div>
+
+    <button
+      (click)="runTest()"
+      [disabled]="loading()"
+      class="test-button">
+      {{loading() ? 'Testing...' : 'Run Test'}}
+    </button>
+  </div>
+
+  @if (testResult(); as result) {
+    <div class="results">
+      <h2>Results</h2>
+      <div class="result-info">
+        <div><strong>Framework:</strong> {{result.framework}}</div>
+        <div><strong>ORM:</strong> {{result.orm}}</div>
+        <div><strong>Duration:</strong> {{result.duration.toFixed(2)}}ms</div>
+      </div>
+
+      @if (result.error) {
+        <div class="error">
+          <strong>Error:</strong> {{result.error}}
+        </div>
+      } @else {
+        <pre class="response">{{result.response | json}}</pre>
+      }
+    </div>
+  }
+</div>
+
+

@@ -143,19 +143,67 @@ if DEV_MODE:
         resource_deps=['postgres']
     )
 
+    # ==========================================
+    # FRONTEND SERVICES
+    # ==========================================
+    # Note: Frontend services have NO dependencies on backend/DB
+    # They will start in parallel with everything else
+
+    # Main frontend launcher (framework selector)
+    local_resource(
+        'frontend-main',
+        serve_cmd='cd frontend && npx serve . -p 5172 --cors',
+        deps=['./frontend/index.html', './frontend/package.json'],
+        labels=['4-frontend'],
+        links=['http://localhost:5172'],
+    )
+
+    # React frontend
+    local_resource(
+        'frontend-react',
+        serve_cmd='cd frontend/react && npm run dev',
+        deps=['./frontend/react/src', './frontend/react/package.json'],
+        labels=['4-frontend'],
+        links=['http://localhost:5173'],
+    )
+
+    # Solid frontend
+    local_resource(
+        'frontend-solid',
+        serve_cmd='cd frontend/solid && npm run dev',
+        deps=['./frontend/solid/src', './frontend/solid/package.json'],
+        labels=['4-frontend'],
+        links=['http://localhost:5174'],
+    )
+
+    # Angular frontend
+    local_resource(
+        'frontend-angular',
+        serve_cmd='cd frontend/angular && npm start',
+        deps=['./frontend/angular/src', './frontend/angular/package.json'],
+        labels=['4-frontend'],
+        links=['http://localhost:5175'],
+    )
+
 print("🚀 Bananas Development Environment (Environment: %s)" % DOCKER_ENV)
 print("📊 Tilt Dashboard: http://localhost:%s" % TILT_PORT)
 print("🔧 Server APIs: http://localhost:8081-8086")
 print("🐘 PostgreSQL: localhost:%s" % DB_PORT)
 print("💡 Hot reloading enabled for all services!")
 print("🧪 Manual test/migration resources available in Tilt UI")
-print("\n📋 All Frameworks Running Simultaneously:")
+print("\n📋 Backend - All Frameworks Running Simultaneously:")
 print("• Standard Library: http://localhost:8081")
-print("• Gin:             http://localhost:8082") 
+print("• Gin:             http://localhost:8082")
 print("• Fiber:           http://localhost:8083")
 print("• Echo:            http://localhost:8084")
 print("• Chi:             http://localhost:8085")
 print("• Gorilla Mux:     http://localhost:8086")
+
+print("\n📋 Frontend - Testing Clients:")
+print("• 🌟 MAIN:         http://localhost:5172  (Framework Switcher)")
+print("• React:           http://localhost:5173")
+print("• Solid:           http://localhost:5174")
+print("• Angular:         http://localhost:5175")
 
 print("\n📋 Quick Commands:")
 print("\n🔧 SERVER (Backend):")
