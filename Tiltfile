@@ -185,6 +185,24 @@ if DEV_MODE:
         links=['http://localhost:5175'],
     )
 
+    # Vue frontend
+    local_resource(
+        'frontend-vue',
+        serve_cmd='cd frontend/vue && npm run dev',
+        deps=['./frontend/vue/src', './frontend/vue/package.json'],
+        labels=['4-frontend'],
+        links=['http://localhost:5176'],
+    )
+
+    # Svelte frontend
+    local_resource(
+        'frontend-svelte',
+        serve_cmd='cd frontend/svelte && npm run dev',
+        deps=['./frontend/svelte/src', './frontend/svelte/package.json'],
+        labels=['4-frontend'],
+        links=['http://localhost:5177'],
+    )
+
 print("🚀 Bananas Development Environment (Environment: %s)" % DOCKER_ENV)
 print("📊 Tilt Dashboard: http://localhost:%s" % TILT_PORT)
 print("🔧 Server APIs: http://localhost:8081-8086")
@@ -204,6 +222,8 @@ print("• 🌟 MAIN:         http://localhost:5172  (Framework Switcher)")
 print("• React:           http://localhost:5173")
 print("• Solid:           http://localhost:5174")
 print("• Angular:         http://localhost:5175")
+print("• Vue:             http://localhost:5176")
+print("• Svelte:          http://localhost:5177")
 
 print("\n📋 Quick Commands:")
 print("\n🔧 SERVER (Backend):")
