@@ -1,0 +1,177 @@
+package templates
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<style>
+				* {
+					box-sizing: border-box;
+				}
+
+				body {
+					margin: 0;
+					padding: 0;
+					font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+					line-height: 1.5;
+					font-weight: 400;
+					color: rgba(255, 255, 255, 0.87);
+					background-color: #242424;
+					min-width: 320px;
+					min-height: 100vh;
+					font-synthesis: none;
+					text-rendering: optimizeLegibility;
+					-webkit-font-smoothing: antialiased;
+					-moz-osx-font-smoothing: grayscale;
+				}
+
+				.app {
+					max-width: 1200px;
+					margin: 0 auto;
+					padding: 2rem;
+				}
+
+				header {
+					text-align: center;
+					margin-bottom: 2rem;
+				}
+
+				header h1 {
+					font-size: 2.5rem;
+					margin-bottom: 0.5rem;
+				}
+
+				header p {
+					font-size: 1.2rem;
+					color: #00add8;
+					font-weight: 600;
+				}
+
+				.controls {
+					display: flex;
+					gap: 1rem;
+					margin-bottom: 2rem;
+					flex-wrap: wrap;
+					align-items: end;
+				}
+
+				.control-group {
+					display: flex;
+					flex-direction: column;
+					gap: 0.5rem;
+					width: 200px;
+				}
+
+				.control-group label {
+					font-weight: 600;
+				}
+
+				.control-group select {
+					padding: 0.5rem;
+					border: 1px solid rgba(255, 255, 255, 0.2);
+					border-radius: 4px;
+					font-size: 1rem;
+					background: rgba(255, 255, 255, 0.1);
+					color: white;
+					cursor: pointer;
+				}
+
+				.control-group select option {
+					background: #242424;
+					color: white;
+				}
+
+				.control-group select:focus {
+					outline: none;
+					border-color: #00add8;
+				}
+
+				.test-button {
+					padding: 0.5rem 2rem;
+					font-size: 1rem;
+					font-weight: 600;
+					background-color: #00add8;
+					color: white;
+					border: none;
+					border-radius: 4px;
+					cursor: pointer;
+					transition: background-color 0.2s;
+				}
+
+				.test-button:hover:not(:disabled) {
+					background-color: #0090b8;
+				}
+
+				.test-button:disabled {
+					background-color: #ccc;
+					cursor: not-allowed;
+				}
+
+				.results {
+					border: 1px solid #ddd;
+					border-radius: 8px;
+					padding: 1.5rem;
+					background-color: #f9f9f9;
+					color: #333;
+				}
+
+				.results h2 {
+					margin-top: 0;
+					margin-bottom: 1rem;
+					color: #333;
+				}
+
+				.result-info {
+					display: flex;
+					gap: 2rem;
+					margin-bottom: 1rem;
+					flex-wrap: wrap;
+				}
+
+				.result-info div {
+					font-size: 1rem;
+					color: #333;
+				}
+
+				.error {
+					padding: 1rem;
+					background-color: #fee;
+					border: 1px solid #fcc;
+					border-radius: 4px;
+					color: #c33;
+				}
+
+				.response {
+					background-color: #1e1e1e;
+					color: #d4d4d4;
+					padding: 1rem;
+					border-radius: 4px;
+					overflow-x: auto;
+					font-size: 0.9rem;
+					line-height: 1.5;
+				}
+
+				.htmx-indicator {
+					display: none;
+				}
+
+				.htmx-request .htmx-indicator {
+					display: inline;
+				}
+
+				.htmx-request span:not(.htmx-indicator) {
+					display: none;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="app">
+				{ children... }
+			</div>
+		</body>
+	</html>
+}

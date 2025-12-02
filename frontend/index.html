@@ -1,419 +1,485 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍌 Bananas - Framework Testing Suite</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bananas - Framework Testing Suite</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        :root {
-            --react-color: #61dafb;
-            --solid-color: #2c4f7c;
-            --angular-color: #dd0031;
-            --vue-color: #42b883;
-            --svelte-color: #ff3e00;
-            --bg-dark: #1a1a1a;
-            --bg-darker: #0d0d0d;
-            --text-primary: rgba(255, 255, 255, 0.87);
-            --text-secondary: rgba(255, 255, 255, 0.6);
-        }
+      :root {
+        --react-color: #61dafb;
+        --solid-color: #2c4f7c;
+        --angular-color: #dd0031;
+        --vue-color: #42b883;
+        --svelte-color: #ff3e00;
+        --templ-color: #00add8;
+        --bg-dark: #1a1a1a;
+        --bg-darker: #0d0d0d;
+        --text-primary: rgba(255, 255, 255, 0.87);
+        --text-secondary: rgba(255, 255, 255, 0.6);
+      }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-darker);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background: var(--bg-darker);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
+      .header {
+        background: var(--bg-dark);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .logo h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .logo p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .framework-selector {
+        display: flex;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.5rem;
+        border-radius: 12px;
+      }
+
+      .framework-btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .framework-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .framework-btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: currentColor;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+      }
+
+      .framework-btn:hover::before {
+        opacity: 0.1;
+      }
+
+      .framework-btn.active {
+        color: white;
+      }
+
+      .framework-btn.active::before {
+        opacity: 0.2;
+      }
+
+      .framework-btn[data-framework="react"] {
+        color: var(--react-color);
+      }
+
+      .framework-btn[data-framework="solid"] {
+        color: var(--solid-color);
+      }
+
+      .framework-btn[data-framework="angular"] {
+        color: var(--angular-color);
+      }
+
+      .framework-btn[data-framework="vue"] {
+        color: var(--vue-color);
+      }
+
+      .framework-btn[data-framework="svelte"] {
+        color: var(--svelte-color);
+      }
+
+      .framework-btn[data-framework="templ"] {
+        color: var(--templ-color);
+      }
+
+      .framework-btn.active[data-framework="react"] {
+        background: var(--react-color);
+        color: #000;
+      }
+
+      .framework-btn.active[data-framework="solid"] {
+        background: var(--solid-color);
+        color: white;
+      }
+
+      .framework-btn.active[data-framework="angular"] {
+        background: var(--angular-color);
+        color: white;
+      }
+
+      .framework-btn.active[data-framework="vue"] {
+        background: var(--vue-color);
+        color: white;
+      }
+
+      .framework-btn.active[data-framework="svelte"] {
+        background: var(--svelte-color);
+        color: white;
+      }
+
+      .framework-btn.active[data-framework="templ"] {
+        background: var(--templ-color);
+        color: white;
+      }
+
+      .info-bar {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.75rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4ade80;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      #framework-container {
+        flex: 1;
+        border: none;
+        width: 100%;
+        background: var(--bg-darker);
+      }
+
+      .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        gap: 1rem;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: var(--react-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .footer {
+        background: var(--bg-dark);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem 2rem;
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .footer a {
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .footer a:hover {
+        color: #ffd700;
+      }
+
+      @media (max-width: 768px) {
         .header {
-            background: var(--bg-dark);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .logo p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+          flex-direction: column;
+          align-items: flex-start;
         }
 
         .framework-selector {
-            display: flex;
-            gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0.5rem;
-            border-radius: 12px;
+          width: 100%;
         }
 
         .framework-btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .framework-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: currentColor;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: -1;
-        }
-
-        .framework-btn:hover::before {
-            opacity: 0.1;
-        }
-
-        .framework-btn.active {
-            color: white;
-        }
-
-        .framework-btn.active::before {
-            opacity: 0.2;
-        }
-
-        .framework-btn[data-framework="react"] {
-            color: var(--react-color);
-        }
-
-        .framework-btn[data-framework="solid"] {
-            color: var(--solid-color);
-        }
-
-        .framework-btn[data-framework="angular"] {
-            color: var(--angular-color);
-        }
-
-        .framework-btn[data-framework="vue"] {
-            color: var(--vue-color);
-        }
-
-        .framework-btn[data-framework="svelte"] {
-            color: var(--svelte-color);
-        }
-
-        .framework-btn.active[data-framework="react"] {
-            background: var(--react-color);
-            color: #000;
-        }
-
-        .framework-btn.active[data-framework="solid"] {
-            background: var(--solid-color);
-            color: white;
-        }
-
-        .framework-btn.active[data-framework="angular"] {
-            background: var(--angular-color);
-            color: white;
-        }
-
-        .framework-btn.active[data-framework="vue"] {
-            background: var(--vue-color);
-            color: white;
-        }
-
-        .framework-btn.active[data-framework="svelte"] {
-            background: var(--svelte-color);
-            color: white;
+          flex: 1;
+          padding: 0.75rem 1rem;
         }
 
         .info-bar {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 0.75rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+          flex-direction: column;
+          gap: 0.5rem;
+          align-items: flex-start;
         }
-
-        .info-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4ade80;
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        #framework-container {
-            flex: 1;
-            border: none;
-            width: 100%;
-            background: var(--bg-darker);
-        }
-
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            gap: 1rem;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--react-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .footer {
-            background: var(--bg-dark);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 2rem;
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .footer a {
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .footer a:hover {
-            color: #ffd700;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .framework-selector {
-                width: 100%;
-            }
-
-            .framework-btn {
-                flex: 1;
-                padding: 0.75rem 1rem;
-            }
-
-            .info-bar {
-                flex-direction: column;
-                gap: 0.5rem;
-                align-items: flex-start;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header class="header">
-        <div class="logo">
-            <div>
-                <h1>🍌 Bananas</h1>
-                <p>Multi-Framework Testing Suite</p>
-            </div>
+      <div class="logo">
+        <div>
+          <h1>🍌 Bananas</h1>
+          <p>Multi-Framework Testing Suite</p>
         </div>
-        <div class="framework-selector">
-            <button class="framework-btn active" data-framework="react" onclick="switchFramework('react')">
-                ⚛️ React
-            </button>
-            <button class="framework-btn" data-framework="solid" onclick="switchFramework('solid')">
-                🔷 Solid
-            </button>
-            <button class="framework-btn" data-framework="angular" onclick="switchFramework('angular')">
-                🅰️ Angular
-            </button>
-            <button class="framework-btn" data-framework="vue" onclick="switchFramework('vue')">
-                ✌️ Vue
-            </button>
-            <button class="framework-btn" data-framework="svelte" onclick="switchFramework('svelte')">
-                🔥 Svelte
-            </button>
-        </div>
+      </div>
+      <div class="framework-selector">
+        <button
+          class="framework-btn active"
+          data-framework="react"
+          onclick="switchFramework('react')"
+        >
+          <img src="logos/react.svg" alt="React" width="20" height="20">
+          React
+        </button>
+        <button
+          class="framework-btn"
+          data-framework="solid"
+          onclick="switchFramework('solid')"
+        >
+          <img src="logos/solid.svg" alt="Solid" width="20" height="20">
+          Solid
+        </button>
+        <button
+          class="framework-btn"
+          data-framework="angular"
+          onclick="switchFramework('angular')"
+        >
+          <img src="logos/angular.svg" alt="Angular" width="20" height="20">
+          Angular
+        </button>
+        <button
+          class="framework-btn"
+          data-framework="vue"
+          onclick="switchFramework('vue')"
+        >
+          <img src="logos/vue.svg" alt="Vue" width="20" height="20">
+          Vue
+        </button>
+        <button
+          class="framework-btn"
+          data-framework="svelte"
+          onclick="switchFramework('svelte')"
+        >
+          <img src="logos/svelte.svg" alt="Svelte" width="20" height="20">
+          Svelte
+        </button>
+        <button
+          class="framework-btn"
+          data-framework="templ"
+          onclick="switchFramework('templ')"
+        >
+          <img src="logos/templ.svg" alt="Templ" width="20" height="20">
+          Templ
+        </button>
+      </div>
     </header>
 
     <div class="info-bar">
-        <div class="info-item">
-            <span class="status-dot"></span>
-            <span id="current-framework">Currently viewing: React</span>
-        </div>
-        <div class="info-item">
-            <span>Backend: 6 Go Frameworks (Ports 8081-8086)</span>
-        </div>
+      <div class="info-item">
+        <span class="status-dot"></span>
+        <span id="current-framework">Currently viewing: React</span>
+      </div>
+      <div class="info-item">
+        <span>Backend: 6 Go Frameworks (Ports 8081-8086)</span>
+      </div>
     </div>
 
     <div class="content">
-        <iframe
-            id="framework-container"
-            src="http://localhost:5173"
-            title="Framework Testing Interface"
-        ></iframe>
+      <iframe
+        id="framework-container"
+        src="http://localhost:5173"
+        title="Framework Testing Interface"
+      ></iframe>
     </div>
 
     <footer class="footer">
-        <p>
-            Testing 6 Go Frameworks (Standard, Gin, Fiber, Echo, Chi, Gorilla) × 4 ORMs (database/sql, GORM, SQLx, PGX)
-            with 5 Frontend Frameworks
-        </p>
+      <p>
+        Testing 6 Go Frameworks (Standard, Gin, Fiber, Echo, Chi, Gorilla) × 4
+        ORMs (database/sql, GORM, SQLx, PGX) with 6 Frontend Frameworks (React, Solid, Angular, Vue, Svelte, Templ+HTMX)
+      </p>
     </footer>
 
     <script>
-        const frameworkPorts = {
-            'react': 5173,
-            'solid': 5174,
-            'angular': 5175,
-            'vue': 5176,
-            'svelte': 5177
-        };
+      const frameworkPorts = {
+        react: 5173,
+        solid: 5174,
+        angular: 5175,
+        vue: 5176,
+        svelte: 5177,
+        templ: 8081, // Templ is served from backend (can use any port 8081-8086)
+      };
 
-        const frameworkNames = {
-            'react': 'React',
-            'solid': 'Solid',
-            'angular': 'Angular',
-            'vue': 'Vue',
-            'svelte': 'Svelte'
-        };
+      const frameworkNames = {
+        react: "React",
+        solid: "Solid",
+        angular: "Angular",
+        vue: "Vue",
+        svelte: "Svelte",
+        templ: "Templ + HTMX",
+      };
 
-        const frameworkEmojis = {
-            'react': '⚛️',
-            'solid': '🔷',
-            'angular': '🅰️',
-            'vue': '✌️',
-            'svelte': '🔥'
-        };
+      let currentFramework = "react";
 
-        let currentFramework = 'react';
+      function switchFramework(framework) {
+        if (framework === currentFramework) return;
 
-        function switchFramework(framework) {
-            if (framework === currentFramework) return;
+        // Update active button
+        document.querySelectorAll(".framework-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        document
+          .querySelector(`[data-framework="${framework}"]`)
+          .classList.add("active");
 
-            // Update active button
-            document.querySelectorAll('.framework-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-framework="${framework}"]`).classList.add('active');
+        // Update iframe source
+        const iframe = document.getElementById("framework-container");
+        const port = frameworkPorts[framework];
 
-            // Update iframe source
-            const iframe = document.getElementById('framework-container');
-            const port = frameworkPorts[framework];
-            iframe.src = `http://localhost:${port}`;
-
-            // Update info bar
-            const infoText = document.getElementById('current-framework');
-            infoText.textContent = `Currently viewing: ${frameworkEmojis[framework]} ${frameworkNames[framework]}`;
-
-            // Update spinner color based on framework
-            const spinner = document.querySelector('.spinner');
-            if (spinner) {
-                const colors = {
-                    'react': 'var(--react-color)',
-                    'solid': 'var(--solid-color)',
-                    'angular': 'var(--angular-color)',
-                    'vue': 'var(--vue-color)',
-                    'svelte': 'var(--svelte-color)'
-                };
-                spinner.style.borderTopColor = colors[framework];
-            }
-
-            currentFramework = framework;
-
-            // Store preference
-            localStorage.setItem('preferredFramework', framework);
+        // Templ is served from backend at /templ route
+        if (framework === 'templ') {
+          iframe.src = `http://localhost:${port}/templ`;
+        } else {
+          iframe.src = `http://localhost:${port}`;
         }
 
-        // Load saved preference on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            const saved = localStorage.getItem('preferredFramework');
-            if (saved && frameworkPorts[saved]) {
-                switchFramework(saved);
-            }
-        });
+        // Update info bar
+        const infoText = document.getElementById("current-framework");
+        infoText.textContent = `Currently viewing: ${frameworkNames[framework]}`;
 
-        // Handle keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.altKey) {
-                switch(e.key) {
-                    case '1':
-                        switchFramework('react');
-                        break;
-                    case '2':
-                        switchFramework('solid');
-                        break;
-                    case '3':
-                        switchFramework('angular');
-                        break;
-                    case '4':
-                        switchFramework('vue');
-                        break;
-                    case '5':
-                        switchFramework('svelte');
-                        break;
-                }
-            }
-        });
+        // Update spinner color based on framework
+        const spinner = document.querySelector(".spinner");
+        if (spinner) {
+          const colors = {
+            react: "var(--react-color)",
+            solid: "var(--solid-color)",
+            angular: "var(--angular-color)",
+            vue: "var(--vue-color)",
+            svelte: "var(--svelte-color)",
+            templ: "var(--templ-color)",
+          };
+          spinner.style.borderTopColor = colors[framework];
+        }
+
+        currentFramework = framework;
+
+        // Store preference
+        localStorage.setItem("preferredFramework", framework);
+      }
+
+      // Load saved preference on page load
+      window.addEventListener("DOMContentLoaded", () => {
+        const saved = localStorage.getItem("preferredFramework");
+        if (saved && frameworkPorts[saved]) {
+          switchFramework(saved);
+        }
+      });
+
+      // Handle keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        if (e.altKey) {
+          switch (e.key) {
+            case "1":
+              switchFramework("react");
+              break;
+            case "2":
+              switchFramework("solid");
+              break;
+            case "3":
+              switchFramework("angular");
+              break;
+            case "4":
+              switchFramework("vue");
+              break;
+            case "5":
+              switchFramework("svelte");
+              break;
+            case "6":
+              switchFramework("templ");
+              break;
+          }
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

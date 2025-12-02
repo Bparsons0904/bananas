@@ -1,0 +1,69 @@
+package templates
+
+type Framework struct {
+	Name  string
+	Value string
+	Port  int
+}
+
+type ORM struct {
+	Name  string
+	Value string
+}
+
+type Endpoint struct {
+	Name string
+	Path string
+}
+
+templ Home() {
+	@Layout("Bananas Framework Tester - Templ + HTMX") {
+		<header>
+			<h1>🍌 Bananas Framework Tester</h1>
+			<p>Templ + HTMX Client</p>
+		</header>
+		<div class="controls">
+			<div class="control-group">
+				<label for="framework">Framework</label>
+				<select id="framework" name="framework">
+					<option value="8081">Standard Library (:8081)</option>
+					<option value="8082">Gin (:8082)</option>
+					<option value="8083">Fiber (:8083)</option>
+					<option value="8084">Echo (:8084)</option>
+					<option value="8085">Chi (:8085)</option>
+					<option value="8086">Gorilla Mux (:8086)</option>
+				</select>
+			</div>
+			<div class="control-group">
+				<label for="orm">ORM</label>
+				<select id="orm" name="orm">
+					<option value="sql">database/sql</option>
+					<option value="gorm">GORM</option>
+					<option value="sqlx">SQLx</option>
+					<option value="pgx">PGX</option>
+				</select>
+			</div>
+			<div class="control-group">
+				<label for="endpoint">Endpoint</label>
+				<select id="endpoint" name="endpoint">
+					<option value="/health">Health Check</option>
+					<option value="/api/test/simple">Simple Test</option>
+					<option value="/api/test/database?limit=10">Database Test</option>
+					<option value="/api/test/json">JSON Test</option>
+					<option value="/api/info">Framework Info</option>
+				</select>
+			</div>
+			<button
+				class="test-button"
+				hx-get="/templ/run-test"
+				hx-include="[name='framework'], [name='orm'], [name='endpoint']"
+				hx-target="#results"
+				hx-swap="innerHTML"
+			>
+				<span class="htmx-indicator">Testing...</span>
+				<span>Run Test</span>
+			</button>
+		</div>
+		<div id="results"></div>
+	}
+}

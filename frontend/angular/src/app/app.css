@@ -2,6 +2,10 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 header {
@@ -10,45 +14,43 @@ header {
 }
 
 header h1 {
-  margin: 0;
   font-size: 2.5rem;
+  margin-bottom: 0.5rem;
 }
 
 header p {
-  margin: 0.5rem 0 0;
-  color: #888;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  color: #dd0031;
+  font-weight: 600;
 }
 
 .controls {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: center;
 }
 
 .control-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 200px;
 }
 
 .control-group label {
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #aaa;
 }
 
 .control-group select {
-  padding: 0.6rem;
-  border-radius: 4px;
+  padding: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 1rem;
   background: rgba(255, 255, 255, 0.1);
   color: white;
-  font-size: 1rem;
   cursor: pointer;
 }
 
@@ -63,71 +65,65 @@ header p {
 }
 
 .test-button {
-  grid-column: 1 / -1;
-  padding: 1rem;
-  font-size: 1.1rem;
+  padding: 0.5rem 2rem;
+  font-size: 1rem;
   font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  background: #dd0031;
+  background-color: #dd0031;
   color: white;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background-color 0.2s;
 }
 
 .test-button:hover:not(:disabled) {
-  background: #c50029;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(221, 0, 49, 0.4);
+  background-color: #c50029;
 }
 
 .test-button:disabled {
-  opacity: 0.5;
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
 .results {
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #ddd;
   border-radius: 8px;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  color: #333;
 }
 
 .results h2 {
   margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
 }
 
 .result-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  display: flex;
+  gap: 2rem;
   margin-bottom: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  flex-wrap: wrap;
 }
 
 .result-info div {
-  font-size: 0.95rem;
-}
-
-.result-info strong {
-  color: #dd0031;
-  margin-right: 0.5rem;
+  font-size: 1rem;
+  color: #333;
 }
 
 .error {
   padding: 1rem;
-  background: rgba(255, 0, 0, 0.1);
-  border: 1px solid rgba(255, 0, 0, 0.3);
+  background-color: #fee;
+  border: 1px solid #fcc;
   border-radius: 4px;
-  color: #ff6b6b;
+  color: #c33;
 }
 
 .response {
-  background: rgba(0, 0, 0, 0.3);
+  background-color: #1e1e1e;
+  color: #d4d4d4;
   padding: 1rem;
   border-radius: 4px;
-  text-align: left;
   overflow-x: auto;
   font-size: 0.9rem;
   line-height: 1.5;

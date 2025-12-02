@@ -13,6 +13,7 @@ type RepositoryInterface interface {
 	GetTestResults(ctx context.Context, limit int) ([]*models.TestResult, error)
 	CreateFramework(ctx context.Context, framework *models.Framework) error
 	GetFrameworks(ctx context.Context, frameworkType string) ([]*models.Framework, error)
+	GetRecentOrders(ctx context.Context, limit int) ([]*models.OrderWithDetails, error)
 }
 
 type SQLRepository struct {
@@ -132,14 +133,14 @@ func (r *SQLRepository) GetFrameworks(ctx context.Context, frameworkType string)
 		WHERE $1 = '' OR type = $1
 		ORDER BY name
 	`
-	
+
 	rows, err := r.DB.SQL.QueryContext(ctx, query, frameworkType)
 	if err != nil {
 		r.Logger.Er("failed to query frameworks", err)
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var frameworks []*models.Framework
 	for rows.Next() {
 		framework := &models.Framework{}
@@ -158,11 +159,135 @@ func (r *SQLRepository) GetFrameworks(ctx context.Context, frameworkType string)
 		}
 		frameworks = append(frameworks, framework)
 	}
-	
+
 	if err := rows.Err(); err != nil {
 		r.Logger.Er("error iterating frameworks", err)
 		return nil, err
 	}
-	
+
 	return frameworks, nil
+}
+
+func (r *SQLRepository) GetRecentOrders(ctx context.Context, limit int) ([]*models.OrderWithDetails, error) {
+	orderQuery := `
+		SELECT
+			so.id, so.order_number, so.customer_id, so.order_date, so.status,
+			so.subtotal, so.tax, so.shipping, so.total, so.notes,
+			so.created_at, so.updated_at, so.deleted_at,
+			c.id, c.first_name, c.last_name, c.email, c.phone,
+			c.created_at, c.updated_at, c.deleted_at
+		FROM sales_orders so
+		JOIN customers c ON so.customer_id = c.id
+		WHERE so.deleted_at IS NULL
+		ORDER BY so.order_date DESC, so.created_at DESC
+		LIMIT $1
+	`
+
+	rows, err := r.DB.SQL.QueryContext(ctx, orderQuery, limit)
+	if err != nil {
+		r.Logger.Er("failed to query orders", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*models.OrderWithDetails
+	orderMap := make(map[string]*models.OrderWithDetails)
+	orderIDs := make([]string, 0)
+
+	for rows.Next() {
+		order := &models.SalesOrder{}
+		customer := &models.Customer{}
+
+		err := rows.Scan(
+			&order.ID, &order.OrderNumber, &order.CustomerID, &order.OrderDate, &order.Status,
+			&order.Subtotal, &order.Tax, &order.Shipping, &order.Total, &order.Notes,
+			&order.CreatedAt, &order.UpdatedAt, &order.DeletedAt,
+			&customer.ID, &customer.FirstName, &customer.LastName, &customer.Email, &customer.Phone,
+			&customer.CreatedAt, &customer.UpdatedAt, &customer.DeletedAt,
+		)
+		if err != nil {
+			r.Logger.Er("failed to scan order", err)
+			return nil, err
+		}
+
+		orderWithDetails := &models.OrderWithDetails{
+			Order:    *order,
+			Customer: *customer,
+			Items:    []models.OrderItemWithProduct{},
+		}
+		orderMap[order.ID.String()] = orderWithDetails
+		orderIDs = append(orderIDs, order.ID.String())
+		results = append(results, orderWithDetails)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.Logger.Er("error iterating orders", err)
+		return nil, err
+	}
+
+	if len(orderIDs) == 0 {
+		return results, nil
+	}
+
+	itemQuery := `
+		SELECT
+			soi.id, soi.sales_order_id, soi.product_id, soi.quantity,
+			soi.unit_price, soi.discount, soi.tax, soi.total,
+			soi.created_at, soi.updated_at,
+			p.id, p.sku, p.name, p.description, p.weight, p.dimensions,
+			p.is_active, p.created_at, p.updated_at, p.deleted_at
+		FROM sales_order_items soi
+		JOIN products p ON soi.product_id = p.id
+		WHERE soi.sales_order_id = ANY($1)
+		ORDER BY soi.created_at
+	`
+
+	itemRows, err := r.DB.SQL.QueryContext(ctx, itemQuery, "{"+joinStrings(orderIDs, ",")+"}")
+	if err != nil {
+		r.Logger.Er("failed to query order items", err)
+		return nil, err
+	}
+	defer itemRows.Close()
+
+	for itemRows.Next() {
+		item := &models.SalesOrderItem{}
+		product := &models.Product{}
+
+		err := itemRows.Scan(
+			&item.ID, &item.SalesOrderID, &item.ProductID, &item.Quantity,
+			&item.UnitPrice, &item.Discount, &item.Tax, &item.Total,
+			&item.CreatedAt, &item.UpdatedAt,
+			&product.ID, &product.SKU, &product.Name, &product.Description, &product.Weight,
+			&product.Dimensions, &product.IsActive, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt,
+		)
+		if err != nil {
+			r.Logger.Er("failed to scan order item", err)
+			return nil, err
+		}
+
+		if orderDetails, ok := orderMap[item.SalesOrderID.String()]; ok {
+			orderDetails.Items = append(orderDetails.Items, models.OrderItemWithProduct{
+				Item:    *item,
+				Product: *product,
+			})
+		}
+	}
+
+	if err := itemRows.Err(); err != nil {
+		r.Logger.Er("error iterating order items", err)
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func joinStrings(strs []string, sep string) string {
+	result := ""
+	for i, s := range strs {
+		if i > 0 {
+			result += sep
+		}
+		result += "\"" + s + "\""
+	}
+	return result
 }

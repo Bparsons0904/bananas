@@ -135,6 +135,22 @@ func main() {
 			app.Controllers.FrameworkInfo(w, r.WithContext(ctx))
 		})
 
+		mux.HandleFunc("/api/orders/recent", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), "framework", "standard")
+			app.Controllers.GetRecentOrders(w, r.WithContext(ctx))
+		})
+
+		// Templ routes
+		mux.HandleFunc("/templ", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), "framework", "standard")
+			app.TemplController.HomePage(w, r.WithContext(ctx))
+		})
+
+		mux.HandleFunc("/templ/run-test", func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), "framework", "standard")
+			app.TemplController.RunTest(w, r.WithContext(ctx))
+		})
+
 		server := &http.Server{
 			Addr:    ":8081",
 			Handler: corsMiddleware(frameworkMiddleware(mux)),
@@ -199,7 +215,21 @@ func main() {
 			api.GET("/info", func(c *gin.Context) {
 				app.Controllers.FrameworkInfo(c.Writer, c.Request)
 			})
+			orders := api.Group("/orders")
+			{
+				orders.GET("/recent", func(c *gin.Context) {
+					app.Controllers.GetRecentOrders(c.Writer, c.Request)
+				})
+			}
 		}
+
+		// Templ routes
+		r.GET("/templ", func(c *gin.Context) {
+			app.TemplController.HomePage(c.Writer, c.Request)
+		})
+		r.GET("/templ/run-test", func(c *gin.Context) {
+			app.TemplController.RunTest(c.Writer, c.Request)
+		})
 
 		server := &http.Server{
 			Addr:    ":8082",
@@ -305,7 +335,52 @@ func main() {
 				app.Controllers.FrameworkInfo(writer, req.WithContext(ctx))
 				return nil
 			})
+			orders := api.Group("/orders")
+			{
+				orders.Get("/recent", func(c *fiber.Ctx) error {
+					ctx := context.WithValue(context.Background(), "framework", "fiber")
+					writer := &fiberResponseWriter{ctx: c}
+
+					parsedURL, _ := url.Parse(c.OriginalURL())
+					req := &http.Request{
+						Method: c.Method(),
+						URL:    parsedURL,
+						Header: make(http.Header),
+					}
+					app.Controllers.GetRecentOrders(writer, req.WithContext(ctx))
+					return nil
+				})
+			}
 		}
+
+		// Templ routes
+		fiberApp.Get("/templ", func(c *fiber.Ctx) error {
+			ctx := context.WithValue(context.Background(), "framework", "fiber")
+			writer := &fiberResponseWriter{ctx: c}
+
+			parsedURL, _ := url.Parse(c.OriginalURL())
+			req := &http.Request{
+				Method: c.Method(),
+				URL:    parsedURL,
+				Header: make(http.Header),
+			}
+			app.TemplController.HomePage(writer, req.WithContext(ctx))
+			return nil
+		})
+
+		fiberApp.Get("/templ/run-test", func(c *fiber.Ctx) error {
+			ctx := context.WithValue(context.Background(), "framework", "fiber")
+			writer := &fiberResponseWriter{ctx: c}
+
+			parsedURL, _ := url.Parse(c.OriginalURL())
+			req := &http.Request{
+				Method: c.Method(),
+				URL:    parsedURL,
+				Header: make(http.Header),
+			}
+			app.TemplController.RunTest(writer, req.WithContext(ctx))
+			return nil
+		})
 
 		wg.Add(1)
 		go func() {
@@ -364,7 +439,24 @@ func main() {
 				app.Controllers.FrameworkInfo(c.Response(), c.Request())
 				return nil
 			})
+			orders := api.Group("/orders")
+			{
+				orders.GET("/recent", func(c echo.Context) error {
+					app.Controllers.GetRecentOrders(c.Response(), c.Request())
+					return nil
+				})
+			}
 		}
+
+		// Templ routes
+		e.GET("/templ", func(c echo.Context) error {
+			app.TemplController.HomePage(c.Response(), c.Request())
+			return nil
+		})
+		e.GET("/templ/run-test", func(c echo.Context) error {
+			app.TemplController.RunTest(c.Response(), c.Request())
+			return nil
+		})
 
 		server := &http.Server{
 			Addr:    ":8084",
@@ -431,6 +523,19 @@ func main() {
 			r.Get("/info", func(w http.ResponseWriter, r *http.Request) {
 				app.Controllers.FrameworkInfo(w, r)
 			})
+			r.Route("/orders", func(r chi.Router) {
+				r.Get("/recent", func(w http.ResponseWriter, r *http.Request) {
+					app.Controllers.GetRecentOrders(w, r)
+				})
+			})
+		})
+
+		// Templ routes
+		r.Get("/templ", func(w http.ResponseWriter, r *http.Request) {
+			app.TemplController.HomePage(w, r)
+		})
+		r.Get("/templ/run-test", func(w http.ResponseWriter, r *http.Request) {
+			app.TemplController.RunTest(w, r)
 		})
 
 		server := &http.Server{
@@ -497,6 +602,19 @@ func main() {
 
 		test.HandleFunc("/json", func(w http.ResponseWriter, r *http.Request) {
 			app.Controllers.JsonResponse(w, r)
+		}).Methods("GET")
+
+		orders := api.PathPrefix("/orders").Subrouter()
+		orders.HandleFunc("/recent", func(w http.ResponseWriter, r *http.Request) {
+			app.Controllers.GetRecentOrders(w, r)
+		}).Methods("GET")
+
+		// Templ routes
+		r.HandleFunc("/templ", func(w http.ResponseWriter, r *http.Request) {
+			app.TemplController.HomePage(w, r)
+		}).Methods("GET")
+		r.HandleFunc("/templ/run-test", func(w http.ResponseWriter, r *http.Request) {
+			app.TemplController.RunTest(w, r)
 		}).Methods("GET")
 
 		server := &http.Server{

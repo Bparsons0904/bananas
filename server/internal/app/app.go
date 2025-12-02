@@ -10,11 +10,12 @@ import (
 )
 
 type App struct {
-	Database    *database.DB
-	Config      config.Config
-	Services    *services.Service
-	RepoManager *repositories.Manager
-	Controllers *controllers.BaseController
+	Database       *database.DB
+	Config         config.Config
+	Services       *services.Service
+	RepoManager    *repositories.Manager
+	Controllers    *controllers.BaseController
+	TemplController *controllers.TemplController
 }
 
 func New() (*App, error) {
@@ -49,14 +50,16 @@ func New() (*App, error) {
 		return &App{}, err
 	}
 
-	controllers := controllers.New(service)
+	baseController := controllers.New(service)
+	templController := controllers.NewTemplController(service, logger.New("templ-controller"))
 
 	app := &App{
-		Database:    db,
-		Config:      cfg,
-		Services:    service,
-		RepoManager: repoManager,
-		Controllers: controllers,
+		Database:       db,
+		Config:         cfg,
+		Services:       service,
+		RepoManager:    repoManager,
+		Controllers:    baseController,
+		TemplController: templController,
 	}
 
 	log.Info("Application initialized successfully with multi-ORM support")

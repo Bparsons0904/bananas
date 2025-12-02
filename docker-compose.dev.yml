@@ -11,11 +11,54 @@ services:
       - "${DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-config/postgresql.conf:/var/lib/postgresql/data/postgresql.conf:ro
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=1GB"
+      - "-c"
+      - "effective_cache_size=3GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=512MB"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "max_worker_processes=8"
+      - "-c"
+      - "max_parallel_workers=6"
+      - "-c"
+      - "max_parallel_workers_per_gather=4"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "checkpoint_timeout=15min"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "max_wal_size=2GB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "log_min_duration_statement=1000"
+      - "-c"
+      - "track_io_timing=on"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U bananas_user -d bananas_dev"]
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '8'
+        reservations:
+          memory: 2G
+          cpus: '4'
     networks:
       - bananas-network
 

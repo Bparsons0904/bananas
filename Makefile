@@ -6,10 +6,12 @@ test:
 
 # Build the application (all 6 frameworks in one binary)
 build:
+	cd server && templ generate
 	cd server && go build -o bin/api ./cmd/api
 
 # Run all 6 frameworks
 run:
+	cd server && templ generate
 	cd server && go run ./cmd/api
 
 # Database operations

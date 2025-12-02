@@ -165,8 +165,7 @@ header p {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1;
-  min-width: 200px;
+  width: 200px;
 }
 
 .control-group label {
@@ -219,11 +218,13 @@ header p {
   border-radius: 8px;
   padding: 1.5rem;
   background-color: #f9f9f9;
+  color: #333;
 }
 
 .results h2 {
   margin-top: 0;
   margin-bottom: 1rem;
+  color: #333;
 }
 
 .result-info {
@@ -235,6 +236,7 @@ header p {
 
 .result-info div {
   font-size: 1rem;
+  color: #333;
 }
 
 .error {

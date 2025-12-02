@@ -23,3 +23,14 @@ type Framework struct {
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
+
+type OrderWithDetails struct {
+	Order    SalesOrder             `json:"order"`
+	Customer Customer               `json:"customer"`
+	Items    []OrderItemWithProduct `json:"items"`
+}
+
+type OrderItemWithProduct struct {
+	Item    SalesOrderItem `json:"item"`
+	Product Product        `json:"product"`
+}

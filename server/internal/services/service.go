@@ -5,6 +5,7 @@ import (
 	"bananas/internal/models"
 	"bananas/internal/repositories"
 	"context"
+	"time"
 )
 
 type Service struct {
@@ -87,4 +88,12 @@ func (s *Service) GetTestResults(ctx context.Context, ormType string, limit int)
 func (s *Service) GetFrameworks(ctx context.Context, ormType string, frameworkType string) ([]*models.Framework, error) {
 	repo := s.RepoManager.GetRepository(ormType)
 	return repo.GetFrameworks(ctx, frameworkType)
+}
+
+func (s *Service) GetRecentOrders(ctx context.Context, ormType string, limit int) ([]*models.OrderWithDetails, int64, error) {
+	start := time.Now()
+	repo := s.RepoManager.GetRepository(ormType)
+	orders, err := repo.GetRecentOrders(ctx, limit)
+	dbTime := time.Since(start).Milliseconds()
+	return orders, dbTime, err
 }

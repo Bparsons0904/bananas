@@ -1,0 +1,44 @@
+package templates
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type TestResult struct {
+	Framework string
+	ORM       string
+	Response  interface{}
+	Duration  float64
+	Error     string
+}
+
+templ Results(result TestResult) {
+	<div class="results">
+		<h2>Results</h2>
+		<div class="result-info">
+			<div><strong>Framework:</strong> { result.Framework }</div>
+			<div><strong>ORM:</strong> { result.ORM }</div>
+			<div><strong>Duration:</strong> { formatDuration(result.Duration) }ms</div>
+		</div>
+		if result.Error != "" {
+			<div class="error">
+				<strong>Error:</strong> { result.Error }
+			</div>
+		} else {
+			<pre class="response">{ formatJSON(result.Response) }</pre>
+		}
+	</div>
+}
+
+func formatDuration(duration float64) string {
+	return fmt.Sprintf("%.2f", duration)
+}
+
+func formatJSON(data interface{}) string {
+	jsonBytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return "Error formatting JSON"
+	}
+	return string(jsonBytes)
+}

@@ -133,8 +133,53 @@ func (c *BaseController) FrameworkInfo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *BaseController) GetRecentOrders(w http.ResponseWriter, r *http.Request) {
+	totalStart := time.Now()
+
+	limitStr := r.URL.Query().Get("limit")
+	limit := 100
+	if limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 && parsedLimit <= 1000 {
+			limit = parsedLimit
+		}
+	}
+
+	ormType := r.URL.Query().Get("orm")
+	if ormType == "" {
+		ormType = "sql"
+	}
+
+	orders, dbTimeMs, err := c.Service.GetRecentOrders(r.Context(), ormType, limit)
+	if err != nil {
+		c.WriteError(w, http.StatusInternalServerError, "Failed to query orders")
+		c.Logger.Er("failed to get recent orders", err)
+		return
+	}
+
+	totalTimeMs := time.Since(totalStart).Milliseconds()
+	frameworkTimeMs := totalTimeMs - dbTimeMs
+
+	err = c.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"orders":        orders,
+		"count":         len(orders),
+		"orm":           ormType,
+		"framework":     r.Context().Value("framework"),
+		"dbTime":        dbTimeMs,
+		"totalTime":     totalTimeMs,
+		"frameworkTime": frameworkTimeMs,
+	})
+
+	if err != nil {
+		c.Logger.Er("failed to write response", err)
+		return
+	}
+
+	c.Logger.Info("Orders query completed - ORM: %s, DB: %dms, Framework: %dms, Total: %dms",
+		ormType, dbTimeMs, frameworkTimeMs, totalTimeMs)
+}
+
 func (c *BaseController) logTestResult(testType string, executionMs int64, success bool) {
 	// This would typically be called via service
-	c.Logger.Info("Test completed - Type: %s, Time: %dms, Success: %v", 
+	c.Logger.Info("Test completed - Type: %s, Time: %dms, Success: %v",
 		testType, executionMs, success)
 }

@@ -1,12 +1,15 @@
 package main
 
 import (
-	"bananas/internal/config"
-	"bananas/internal/database"
-	"bananas/internal/logger"
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
+
+	"bananas/internal/config"
+	"bananas/internal/database"
+	"bananas/internal/logger"
+	"bananas/internal/seeder"
 
 	_ "github.com/lib/pq"
 )
@@ -40,6 +43,10 @@ func main() {
 		switch command {
 		case "up":
 			err = migrateUp(db)
+			if err == nil {
+				// Auto-check if seeding is needed
+				err = autoSeedIfNeeded(db, log)
+			}
 		case "down":
 			err = migrateDown(db)
 		case "seed":
@@ -83,7 +90,10 @@ func createDatabase(cfg config.Config, log logger.Logger) error {
 	}
 
 	var exists bool
-	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = '%s')", cfg.DatabaseConfig.DBName)
+	query := fmt.Sprintf(
+		"SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = '%s')",
+		cfg.DatabaseConfig.DBName,
+	)
 	err = adminDB.QueryRow(query).Scan(&exists)
 	if err != nil {
 		log.Er("failed to check if database exists", err)
@@ -106,7 +116,10 @@ func createDatabase(cfg config.Config, log logger.Logger) error {
 
 	if cfg.DatabaseConfig.User != cfg.DatabaseConfig.AdminUser {
 		var userExists bool
-		userQuery := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '%s')", cfg.DatabaseConfig.User)
+		userQuery := fmt.Sprintf(
+			"SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname = '%s')",
+			cfg.DatabaseConfig.User,
+		)
 		err = adminDB.QueryRow(userQuery).Scan(&userExists)
 		if err != nil {
 			log.Er("failed to check if user exists", err)
@@ -114,7 +127,11 @@ func createDatabase(cfg config.Config, log logger.Logger) error {
 		}
 
 		if !userExists {
-			createUserQuery := fmt.Sprintf("CREATE USER %s WITH PASSWORD '%s'", cfg.DatabaseConfig.User, cfg.DatabaseConfig.Password)
+			createUserQuery := fmt.Sprintf(
+				"CREATE USER %s WITH PASSWORD '%s'",
+				cfg.DatabaseConfig.User,
+				cfg.DatabaseConfig.Password,
+			)
 			_, err = adminDB.Exec(createUserQuery)
 			if err != nil {
 				log.Er("failed to create user", err)
@@ -123,7 +140,11 @@ func createDatabase(cfg config.Config, log logger.Logger) error {
 			log.Info("Database user created", "user", cfg.DatabaseConfig.User)
 		}
 
-		grantQuery := fmt.Sprintf("GRANT ALL PRIVILEGES ON DATABASE %s TO %s", cfg.DatabaseConfig.DBName, cfg.DatabaseConfig.User)
+		grantQuery := fmt.Sprintf(
+			"GRANT ALL PRIVILEGES ON DATABASE %s TO %s",
+			cfg.DatabaseConfig.DBName,
+			cfg.DatabaseConfig.User,
+		)
 		_, err = adminDB.Exec(grantQuery)
 		if err != nil {
 			log.Er("failed to grant privileges", err)
@@ -473,6 +494,69 @@ func migrateDown(db *database.DB) error {
 	return nil
 }
 
+// autoSeedIfNeeded checks if database needs seeding and runs the full seeder if needed
+func autoSeedIfNeeded(db *database.DB, log logger.Logger) error {
+	// Use SmallConfig for faster initial testing
+	// Change to DefaultConfig() for production millions of records
+	// cfg := seeder.SmallConfig()
+	cfg := seeder.DefaultConfig()
+
+	needsSeeding, err := seeder.CheckNeedsSeeding(db, cfg.Customers)
+	if err != nil {
+		log.Er("failed to check if seeding is needed", err)
+		return err
+	}
+
+	if !needsSeeding {
+		log.Info(
+			fmt.Sprintf(
+				"Database already has sufficient data (>= %d customers), skipping auto-seed",
+				cfg.Customers,
+			),
+		)
+		return nil
+	}
+
+	log.Info("Database needs seeding, clearing existing data first...")
+
+	// Clear existing data in reverse dependency order to avoid foreign key violations
+	tables := []string{
+		"customer_addresses", "product_categories", "purchase_order_receipts",
+		"purchase_order_items", "purchase_orders", "sales_order_payments",
+		"sales_order_items", "sales_orders", "supplier_products",
+		"product_costs", "product_prices", "inventory_transactions",
+		"inventory", "products", "warehouses", "customers", "suppliers", "categories",
+	}
+
+	for _, table := range tables {
+		_, err := db.SQL.Exec(fmt.Sprintf("DELETE FROM %s", table))
+		if err != nil {
+			log.Er(fmt.Sprintf("failed to clear %s", table), err)
+			return err
+		}
+	}
+
+	log.Info("Existing data cleared, starting data generation...")
+	log.Info(
+		fmt.Sprintf(
+			"Target: %d products, %d customers, %d sales orders (estimated %d total records)",
+			cfg.Products,
+			cfg.Customers,
+			cfg.SalesOrders,
+			cfg.TotalRecordsEstimate(),
+		),
+	)
+
+	s := seeder.New(db, cfg)
+	ctx := context.Background()
+
+	if err := s.SeedAll(ctx); err != nil {
+		return fmt.Errorf("seeding failed: %w", err)
+	}
+
+	return nil
+}
+
 func seed(db *database.DB) error {
 	log := db.Logger.Function("seed")
 
@@ -517,7 +601,9 @@ func seed(db *database.DB) error {
 		var id string
 		err := db.SQL.QueryRow(
 			`INSERT INTO categories (name, description, parent_id) VALUES ($1, $2, $3) RETURNING id`,
-			cat.name, cat.desc, parentID,
+			cat.name,
+			cat.desc,
+			parentID,
 		).Scan(&id)
 		if err != nil {
 			log.Er("failed to insert category", err)
@@ -540,7 +626,11 @@ func seed(db *database.DB) error {
 		var id string
 		err := db.SQL.QueryRow(
 			`INSERT INTO suppliers (name, contact_name, email, city, country) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-			sup.name, sup.contact, sup.email, sup.city, sup.country,
+			sup.name,
+			sup.contact,
+			sup.email,
+			sup.city,
+			sup.country,
 		).Scan(&id)
 		if err != nil {
 			log.Er("failed to insert supplier", err)
@@ -561,7 +651,10 @@ func seed(db *database.DB) error {
 		var id string
 		err := db.SQL.QueryRow(
 			`INSERT INTO warehouses (name, code, city, country) VALUES ($1, $2, $3, $4) RETURNING id`,
-			wh.name, wh.code, wh.city, wh.country,
+			wh.name,
+			wh.code,
+			wh.city,
+			wh.country,
 		).Scan(&id)
 		if err != nil {
 			log.Er("failed to insert warehouse", err)
@@ -572,7 +665,10 @@ func seed(db *database.DB) error {
 
 	// Seed Products (50 products)
 	productIDs := make([]string, 0, 50)
-	products := []struct{ sku, name, desc string; weight float64 }{
+	products := []struct {
+		sku, name, desc string
+		weight          float64
+	}{
 		{"LAPTOP-001", "Dell XPS 13", "13-inch ultrabook laptop", 1.2},
 		{"LAPTOP-002", "MacBook Pro 14", "Apple 14-inch laptop", 1.6},
 		{"LAPTOP-003", "ThinkPad X1", "Lenovo business laptop", 1.4},
@@ -589,7 +685,10 @@ func seed(db *database.DB) error {
 		var id string
 		err := db.SQL.QueryRow(
 			`INSERT INTO products (sku, name, description, weight, is_active) VALUES ($1, $2, $3, $4, true) RETURNING id`,
-			prod.sku, prod.name, prod.desc, prod.weight,
+			prod.sku,
+			prod.name,
+			prod.desc,
+			prod.weight,
 		).Scan(&id)
 		if err != nil {
 			log.Er("failed to insert product", err)
@@ -642,7 +741,11 @@ func seed(db *database.DB) error {
 		supplierID := supplierIDs[i%len(supplierIDs)]
 		_, err = db.SQL.Exec(
 			`INSERT INTO supplier_products (supplier_id, product_id, cost, lead_time_days, minimum_order_quantity) VALUES ($1, $2, $3, $4, $5)`,
-			supplierID, id, cost, 7+i%14, 10+i*5,
+			supplierID,
+			id,
+			cost,
+			7+i%14,
+			10+i*5,
 		)
 		if err != nil {
 			log.Er("failed to link product to supplier", err)
@@ -654,7 +757,9 @@ func seed(db *database.DB) error {
 			qty := 100 + (i * 10)
 			_, err = db.SQL.Exec(
 				`INSERT INTO inventory (product_id, warehouse_id, quantity, reserved_quantity, reorder_point, reorder_quantity) VALUES ($1, $2, $3, 0, 50, 100)`,
-				id, whID, qty,
+				id,
+				whID,
+				qty,
 			)
 			if err != nil {
 				log.Er("failed to insert inventory", err)
@@ -665,8 +770,30 @@ func seed(db *database.DB) error {
 
 	// Seed Customers (20 customers)
 	customerIDs := make([]string, 0, 20)
-	firstNames := []string{"John", "Jane", "Bob", "Alice", "Charlie", "Diana", "Frank", "Grace", "Henry", "Iris"}
-	lastNames := []string{"Smith", "Doe", "Johnson", "Williams", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor"}
+	firstNames := []string{
+		"John",
+		"Jane",
+		"Bob",
+		"Alice",
+		"Charlie",
+		"Diana",
+		"Frank",
+		"Grace",
+		"Henry",
+		"Iris",
+	}
+	lastNames := []string{
+		"Smith",
+		"Doe",
+		"Johnson",
+		"Williams",
+		"Brown",
+		"Davis",
+		"Miller",
+		"Wilson",
+		"Moore",
+		"Taylor",
+	}
 
 	for i := 0; i < 20; i++ {
 		firstName := firstNames[i%len(firstNames)]
@@ -677,7 +804,10 @@ func seed(db *database.DB) error {
 		var id string
 		err := db.SQL.QueryRow(
 			`INSERT INTO customers (first_name, last_name, email, phone) VALUES ($1, $2, $3, $4) RETURNING id`,
-			firstName, lastName, email, phone,
+			firstName,
+			lastName,
+			email,
+			phone,
 		).Scan(&id)
 		if err != nil {
 			log.Er("failed to insert customer", err)
@@ -688,7 +818,8 @@ func seed(db *database.DB) error {
 		// Add customer addresses
 		_, err = db.SQL.Exec(
 			`INSERT INTO customer_addresses (customer_id, address_type, address_line1, city, state, postal_code, country, is_default) VALUES ($1, 'shipping', $2, 'Austin', 'TX', '78701', 'USA', true)`,
-			id, fmt.Sprintf("%d Main St", 100+i),
+			id,
+			fmt.Sprintf("%d Main St", 100+i),
 		)
 		if err != nil {
 			log.Er("failed to insert customer address", err)
@@ -704,7 +835,9 @@ func seed(db *database.DB) error {
 		var orderID string
 		err := db.SQL.QueryRow(
 			`INSERT INTO sales_orders (order_number, customer_id, status, subtotal, tax, shipping, total) VALUES ($1, $2, $3, 0, 0, 0, 0) RETURNING id`,
-			orderNum, customerID, "completed",
+			orderNum,
+			customerID,
+			"completed",
 		).Scan(&orderID)
 		if err != nil {
 			log.Er("failed to insert sales order", err)
@@ -724,7 +857,12 @@ func seed(db *database.DB) error {
 
 			_, err = db.SQL.Exec(
 				`INSERT INTO sales_order_items (sales_order_id, product_id, quantity, unit_price, discount, tax, total) VALUES ($1, $2, $3, $4, 0, $5, $6)`,
-				orderID, productID, qty, unitPrice, total*0.08, total,
+				orderID,
+				productID,
+				qty,
+				unitPrice,
+				total*0.08,
+				total,
 			)
 			if err != nil {
 				log.Er("failed to insert sales order item", err)
@@ -739,7 +877,11 @@ func seed(db *database.DB) error {
 
 		_, err = db.SQL.Exec(
 			`UPDATE sales_orders SET subtotal = $1, tax = $2, shipping = $3, total = $4 WHERE id = $5`,
-			orderTotal, tax, shipping, finalTotal, orderID,
+			orderTotal,
+			tax,
+			shipping,
+			finalTotal,
+			orderID,
 		)
 		if err != nil {
 			log.Er("failed to update sales order totals", err)
@@ -749,7 +891,9 @@ func seed(db *database.DB) error {
 		// Add payment
 		_, err = db.SQL.Exec(
 			`INSERT INTO sales_order_payments (sales_order_id, payment_method, amount, status, transaction_id) VALUES ($1, 'credit_card', $2, 'completed', $3)`,
-			orderID, finalTotal, fmt.Sprintf("TXN-%d", 10000+i),
+			orderID,
+			finalTotal,
+			fmt.Sprintf("TXN-%d", 10000+i),
 		)
 		if err != nil {
 			log.Er("failed to insert sales order payment", err)
@@ -766,7 +910,10 @@ func seed(db *database.DB) error {
 		var poID string
 		err := db.SQL.QueryRow(
 			`INSERT INTO purchase_orders (po_number, supplier_id, warehouse_id, status, subtotal, tax, shipping, total) VALUES ($1, $2, $3, $4, 0, 0, 0, 0) RETURNING id`,
-			poNum, supplierID, warehouseID, "received",
+			poNum,
+			supplierID,
+			warehouseID,
+			"received",
 		).Scan(&poID)
 		if err != nil {
 			log.Er("failed to insert purchase order", err)
@@ -787,7 +934,13 @@ func seed(db *database.DB) error {
 			var poItemID string
 			err = db.SQL.QueryRow(
 				`INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, unit_cost, tax, total, received_quantity) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-				poID, productID, qty, unitCost, total*0.06, total, qty,
+				poID,
+				productID,
+				qty,
+				unitCost,
+				total*0.06,
+				total,
+				qty,
 			).Scan(&poItemID)
 			if err != nil {
 				log.Er("failed to insert purchase order item", err)
@@ -797,7 +950,9 @@ func seed(db *database.DB) error {
 			// Add receipt record
 			_, err = db.SQL.Exec(
 				`INSERT INTO purchase_order_receipts (purchase_order_id, purchase_order_item_id, quantity_received, received_by) VALUES ($1, $2, $3, 'Warehouse Staff')`,
-				poID, poItemID, qty,
+				poID,
+				poItemID,
+				qty,
 			)
 			if err != nil {
 				log.Er("failed to insert purchase order receipt", err)
@@ -812,7 +967,11 @@ func seed(db *database.DB) error {
 
 		_, err = db.SQL.Exec(
 			`UPDATE purchase_orders SET subtotal = $1, tax = $2, shipping = $3, total = $4 WHERE id = $5`,
-			poTotal, tax, shipping, finalTotal, poID,
+			poTotal,
+			tax,
+			shipping,
+			finalTotal,
+			poID,
 		)
 		if err != nil {
 			log.Er("failed to update purchase order totals", err)

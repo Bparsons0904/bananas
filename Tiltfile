@@ -24,8 +24,8 @@ docker_build(
     dockerfile='./server/Dockerfile.dev',
     target='development',
     ignore=[
-        'tmp/', 
-        '*.log', 
+        'tmp/',
+        '*.log',
         'main',
         '.git/',
         'Dockerfile*',
@@ -33,6 +33,10 @@ docker_build(
         'data/',
         '*.db',
         '*.db-journal',
+    ],
+    live_update=[
+        sync('./server', '/app'),
+        run('templ generate', trigger=['./internal/templates/*.templ']),
     ]
 )
 
@@ -210,12 +214,12 @@ print("🐘 PostgreSQL: localhost:%s" % DB_PORT)
 print("💡 Hot reloading enabled for all services!")
 print("🧪 Manual test/migration resources available in Tilt UI")
 print("\n📋 Backend - All Frameworks Running Simultaneously:")
-print("• Standard Library: http://localhost:8081")
-print("• Gin:             http://localhost:8082")
-print("• Fiber:           http://localhost:8083")
-print("• Echo:            http://localhost:8084")
-print("• Chi:             http://localhost:8085")
-print("• Gorilla Mux:     http://localhost:8086")
+print("• Standard Library: http://localhost:8081  (Templ UI: /templ)")
+print("• Gin:             http://localhost:8082  (Templ UI: /templ)")
+print("• Fiber:           http://localhost:8083  (Templ UI: /templ)")
+print("• Echo:            http://localhost:8084  (Templ UI: /templ)")
+print("• Chi:             http://localhost:8085  (Templ UI: /templ)")
+print("• Gorilla Mux:     http://localhost:8086  (Templ UI: /templ)")
 
 print("\n📋 Frontend - Testing Clients:")
 print("• 🌟 MAIN:         http://localhost:5172  (Framework Switcher)")
